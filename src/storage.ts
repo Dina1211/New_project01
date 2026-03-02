@@ -18,6 +18,7 @@ const K = {
   daily: 'pomo_daily_map',
   group: 'pomo_group_count',
   lastTask: 'pomo_last_task',
+  taskHistory: 'pomo_task_history',
   // 持久化 phase 恢复用
   phase: 'pomo_phase',
   targetEnd: 'pomo_target_end',
@@ -69,6 +70,30 @@ export function getGroupCount(): number {
 
 export function setGroupCount(n: number): void {
   localStorage.setItem(K.group, String(n))
+}
+
+// ── 今日任务历史 task → pomodoro count ───────────────
+
+interface TaskHistoryStore {
+  date: string
+  tasks: Record<string, number>
+}
+
+export function getTodayTaskHistory(): Record<string, number> {
+  try {
+    const raw = localStorage.getItem(K.taskHistory)
+    if (!raw) return {}
+    const store: TaskHistoryStore = JSON.parse(raw)
+    return store.date === todayKey() ? store.tasks : {}
+  } catch {
+    return {}
+  }
+}
+
+export function incrementTaskHistory(taskName: string): void {
+  const tasks = getTodayTaskHistory()
+  tasks[taskName] = (tasks[taskName] ?? 0) + 1
+  localStorage.setItem(K.taskHistory, JSON.stringify({ date: todayKey(), tasks }))
 }
 
 // ── 上次任务名 ────────────────────────────────────────

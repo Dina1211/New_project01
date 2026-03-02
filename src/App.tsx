@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { usePomodoroMachine } from './hooks/usePomodoroMachine'
 import { HomeView } from './components/HomeView'
 import { TryView } from './components/TryView'
@@ -7,6 +8,12 @@ import { BreakTimerView } from './components/BreakTimerView'
 import { LongBreakView } from './components/LongBreakView'
 
 export default function App() {
+  useEffect(() => {
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      Notification.requestPermission()
+    }
+  }, [])
+
   const {
     phase,
     taskName,
@@ -16,6 +23,7 @@ export default function App() {
     groupCount,
     todayCount,
     totalCount,
+    taskHistory,
     startTry,
     startFocus,
     pauseResume,
@@ -38,6 +46,7 @@ export default function App() {
           totalCount={totalCount}
           groupCount={groupCount}
           taskName={taskName}
+          taskHistory={taskHistory}
           startTry={startTry}
           startFocus={startFocus}
         />

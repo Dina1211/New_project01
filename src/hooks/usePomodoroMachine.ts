@@ -21,6 +21,7 @@ export interface MachineState {
   groupCount: number     // 当前组已完成番茄数 0-4
   todayCount: number     // 今日完成番茄数
   totalCount: number     // 累计完成番茄数
+  taskHistory: Record<string, number>  // 今日任务名 → 完成番茄数
 }
 
 export interface MachineActions {
@@ -55,6 +56,7 @@ function buildInitialState(): MachineState {
     groupCount: group,
     todayCount: today,
     totalCount: total,
+    taskHistory: storage.getTodayTaskHistory(),
   }
 
   if (!persisted) return base
@@ -114,6 +116,8 @@ export function usePomodoroMachine(): MachineState & MachineActions {
   // targetEndTime：计时终点 ms timestamp（抗漂移核心）
   const targetEndRef = useRef<number | null>(null)
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  // 防止 React StrictMode 在 setState updater 中双调 storage 副作用
+  const focusCompletedRef = useRef(false)
 
   // ── 持久化 state 到 localStorage ────────────────────
   const persist = useCallback((s: MachineState, targetEnd: number | null) => {
@@ -131,6 +135,7 @@ export function usePomodoroMachine(): MachineState & MachineActions {
   const startTimer = useCallback(
     (durationSec: number, nextState: Partial<MachineState>) => {
       if (tickRef.current) clearInterval(tickRef.current)
+      if (nextState.phase === 'focus') focusCompletedRef.current = false
       const end = Date.now() + durationSec * 1000
       targetEndRef.current = end
 
@@ -166,8 +171,15 @@ export function usePomodoroMachine(): MachineState & MachineActions {
             }
             // focus 完成时记录统计
             if (prev.phase === 'focus') {
-              storage.incrementTotal()
-              storage.incrementToday()
+              if (!focusCompletedRef.current) {
+                focusCompletedRef.current = true
+                storage.incrementTotal()
+                storage.incrementToday()
+                storage.incrementTaskHistory(prev.taskName)
+                if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                  new Notification('🍅 番茄完成！', { body: '休息一下吧' })
+                }
+              }
               const newGroup = prev.groupCount + 1
               // 不在此处重置 groupCount，让 focusComplete 先用它判断是否长休
               // 重置在 skipLongBreak / startNewRound / startLongBreak 中处理
@@ -178,6 +190,7 @@ export function usePomodoroMachine(): MachineState & MachineActions {
                 groupCount: newGroup,
                 todayCount: prev.todayCount + 1,
                 totalCount: prev.totalCount + 1,
+                taskHistory: storage.getTodayTaskHistory(),
               }
               persist(updated, null)
               return updated
@@ -220,8 +233,15 @@ export function usePomodoroMachine(): MachineState & MachineActions {
                 timeLeft: 0,
               }
               if (prev.phase === 'focus') {
-                storage.incrementTotal()
-                storage.incrementToday()
+                if (!focusCompletedRef.current) {
+                  focusCompletedRef.current = true
+                  storage.incrementTotal()
+                  storage.incrementToday()
+                  storage.incrementTaskHistory(prev.taskName)
+                  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                    new Notification('🍅 番茄完成！', { body: '休息一下吧' })
+                  }
+                }
                 const newGroup = prev.groupCount + 1
                 storage.setGroupCount(newGroup)
                 storage.setLastTask(prev.taskName)
@@ -230,6 +250,7 @@ export function usePomodoroMachine(): MachineState & MachineActions {
                   groupCount: newGroup,
                   todayCount: prev.todayCount + 1,
                   totalCount: prev.totalCount + 1,
+                  taskHistory: storage.getTodayTaskHistory(),
                 }
                 persist(updated, null)
                 return updated
@@ -277,8 +298,15 @@ export function usePomodoroMachine(): MachineState & MachineActions {
             if (remaining === 0) {
               if (tickRef.current) clearInterval(tickRef.current)
               tickRef.current = null
-              storage.incrementTotal()
-              storage.incrementToday()
+              if (!focusCompletedRef.current) {
+                focusCompletedRef.current = true
+                storage.incrementTotal()
+                storage.incrementToday()
+                storage.incrementTaskHistory(s.taskName)
+                if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                  new Notification('🍅 番茄完成！', { body: '休息一下吧' })
+                }
+              }
               const newGroup = s.groupCount + 1
               storage.setGroupCount(newGroup)
               storage.setLastTask(s.taskName)
@@ -289,6 +317,7 @@ export function usePomodoroMachine(): MachineState & MachineActions {
                 groupCount: newGroup,
                 todayCount: s.todayCount + 1,
                 totalCount: s.totalCount + 1,
+                taskHistory: storage.getTodayTaskHistory(),
               }
               persist(updated, null)
               return updated
@@ -339,6 +368,7 @@ export function usePomodoroMachine(): MachineState & MachineActions {
       todayCount: storage.getTodayCount(),
       totalCount: storage.getTotal(),
       groupCount: storage.getGroupCount(),
+      taskHistory: storage.getTodayTaskHistory(),
     }))
   }, [])
 

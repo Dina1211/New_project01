@@ -7,13 +7,14 @@ type Props = Pick<
   | 'totalCount'
   | 'groupCount'
   | 'taskName'
+  | 'taskHistory'
   | 'startTry'
   | 'startFocus'
 >
 
 const MAX_TASK_LEN = 20
 
-export function HomeView({ todayCount, totalCount, groupCount, taskName: savedTask, startTry, startFocus }: Props) {
+export function HomeView({ todayCount, totalCount, groupCount, taskName: savedTask, taskHistory, startTry, startFocus }: Props) {
   const [showFocusInput, setShowFocusInput] = useState(false)
   const [task, setTask] = useState(savedTask)
 
@@ -109,6 +110,21 @@ export function HomeView({ todayCount, totalCount, groupCount, taskName: savedTa
             <p className="text-xs text-gray-400 mt-1">累计番茄</p>
           </div>
         </div>
+
+        {/* 今日任务历史 */}
+        {Object.keys(taskHistory).length > 0 && (
+          <div className="bg-white rounded-2xl p-4 shadow-sm">
+            <p className="text-xs text-gray-400 mb-3 text-center">今日任务</p>
+            <div className="flex flex-col gap-2">
+              {Object.entries(taskHistory).map(([name, count]) => (
+                <div key={name} className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700 truncate flex-1 mr-2">{name}</span>
+                  <span className="text-sm font-semibold text-orange-500 whitespace-nowrap">🍅 ×{count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* 入口按钮 */}
         <div className="flex flex-col gap-3">
