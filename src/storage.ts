@@ -19,6 +19,8 @@ const K = {
   group: 'pomo_group_count',
   lastTask: 'pomo_last_task',
   taskHistory: 'pomo_task_history',
+  wrapupDate: 'pomo_wrapup_date',
+  dailyGroups: 'pomo_daily_groups',
   // 持久化 phase 恢复用
   phase: 'pomo_phase',
   targetEnd: 'pomo_target_end',
@@ -94,6 +96,34 @@ export function incrementTaskHistory(taskName: string): void {
   const tasks = getTodayTaskHistory()
   tasks[taskName] = (tasks[taskName] ?? 0) + 1
   localStorage.setItem(K.taskHistory, JSON.stringify({ date: todayKey(), tasks }))
+}
+
+// ── 今日完成组数 ──────────────────────────────────────
+
+export function getDailyCompletedGroups(): number {
+  try {
+    const raw = localStorage.getItem(K.dailyGroups)
+    if (!raw) return 0
+    const store: { date: string; count: number } = JSON.parse(raw)
+    return store.date === todayKey() ? store.count : 0
+  } catch {
+    return 0
+  }
+}
+
+export function incrementDailyCompletedGroups(): void {
+  const count = getDailyCompletedGroups()
+  localStorage.setItem(K.dailyGroups, JSON.stringify({ date: todayKey(), count: count + 1 }))
+}
+
+// ── 今日收尾 ─────────────────────────────────────────
+
+export function hasWrappedUpToday(): boolean {
+  return localStorage.getItem(K.wrapupDate) === todayKey()
+}
+
+export function markWrappedUpToday(): void {
+  localStorage.setItem(K.wrapupDate, todayKey())
 }
 
 // ── 上次任务名 ────────────────────────────────────────

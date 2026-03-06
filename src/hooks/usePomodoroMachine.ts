@@ -22,6 +22,7 @@ export interface MachineState {
   todayCount: number     // 今日完成番茄数
   totalCount: number     // 累计完成番茄数
   taskHistory: Record<string, number>  // 今日任务名 → 完成番茄数
+  completedGroupsToday: number          // 今日完成的完整组数（每组4个）
 }
 
 export interface MachineActions {
@@ -57,6 +58,7 @@ function buildInitialState(): MachineState {
     todayCount: today,
     totalCount: total,
     taskHistory: storage.getTodayTaskHistory(),
+    completedGroupsToday: storage.getDailyCompletedGroups(),
   }
 
   if (!persisted) return base
@@ -176,6 +178,7 @@ export function usePomodoroMachine(): MachineState & MachineActions {
                 storage.incrementTotal()
                 storage.incrementToday()
                 storage.incrementTaskHistory(prev.taskName)
+                if (prev.groupCount === 3) storage.incrementDailyCompletedGroups()
                 if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
                   new Notification('🍅 番茄完成！', { body: '休息一下吧' })
                 }
@@ -191,6 +194,7 @@ export function usePomodoroMachine(): MachineState & MachineActions {
                 todayCount: prev.todayCount + 1,
                 totalCount: prev.totalCount + 1,
                 taskHistory: storage.getTodayTaskHistory(),
+                completedGroupsToday: storage.getDailyCompletedGroups(),
               }
               persist(updated, null)
               return updated
@@ -238,6 +242,7 @@ export function usePomodoroMachine(): MachineState & MachineActions {
                   storage.incrementTotal()
                   storage.incrementToday()
                   storage.incrementTaskHistory(prev.taskName)
+                  if (prev.groupCount === 3) storage.incrementDailyCompletedGroups()
                   if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
                     new Notification('🍅 番茄完成！', { body: '休息一下吧' })
                   }
@@ -251,6 +256,7 @@ export function usePomodoroMachine(): MachineState & MachineActions {
                   todayCount: prev.todayCount + 1,
                   totalCount: prev.totalCount + 1,
                   taskHistory: storage.getTodayTaskHistory(),
+                  completedGroupsToday: storage.getDailyCompletedGroups(),
                 }
                 persist(updated, null)
                 return updated
@@ -303,6 +309,7 @@ export function usePomodoroMachine(): MachineState & MachineActions {
                 storage.incrementTotal()
                 storage.incrementToday()
                 storage.incrementTaskHistory(s.taskName)
+                if (s.groupCount === 3) storage.incrementDailyCompletedGroups()
                 if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
                   new Notification('🍅 番茄完成！', { body: '休息一下吧' })
                 }
@@ -318,6 +325,7 @@ export function usePomodoroMachine(): MachineState & MachineActions {
                 todayCount: s.todayCount + 1,
                 totalCount: s.totalCount + 1,
                 taskHistory: storage.getTodayTaskHistory(),
+                completedGroupsToday: storage.getDailyCompletedGroups(),
               }
               persist(updated, null)
               return updated
@@ -369,6 +377,7 @@ export function usePomodoroMachine(): MachineState & MachineActions {
       totalCount: storage.getTotal(),
       groupCount: storage.getGroupCount(),
       taskHistory: storage.getTodayTaskHistory(),
+      completedGroupsToday: storage.getDailyCompletedGroups(),
     }))
   }, [])
 
@@ -437,6 +446,8 @@ export function usePomodoroMachine(): MachineState & MachineActions {
       groupCount: 0,
       todayCount: storage.getTodayCount(),
       totalCount: storage.getTotal(),
+      taskHistory: storage.getTodayTaskHistory(),
+      completedGroupsToday: storage.getDailyCompletedGroups(),
     }))
   }, [])
 
@@ -451,6 +462,8 @@ export function usePomodoroMachine(): MachineState & MachineActions {
       groupCount: 0,
       todayCount: storage.getTodayCount(),
       totalCount: storage.getTotal(),
+      taskHistory: storage.getTodayTaskHistory(),
+      completedGroupsToday: storage.getDailyCompletedGroups(),
     }))
   }, [])
 

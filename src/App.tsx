@@ -24,6 +24,7 @@ export default function App() {
     todayCount,
     totalCount,
     taskHistory,
+    completedGroupsToday,
     startTry,
     startFocus,
     pauseResume,
@@ -47,6 +48,7 @@ export default function App() {
           groupCount={groupCount}
           taskName={taskName}
           taskHistory={taskHistory}
+          completedGroupsToday={completedGroupsToday}
           startTry={startTry}
           startFocus={startFocus}
         />
